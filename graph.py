@@ -12,7 +12,7 @@ class Graph:
         nx.set_node_attributes(self.G, {node: color}, name='color')
 
     def copy(self):
-        return deepcopy(self.G)
+        return deepcopy(self)
 
     def order_nodes(self, nodes: set):
         nodes = list(nodes)
@@ -35,8 +35,9 @@ class Graph:
         # all possible colors for this node wil be moves
         busted_colors = set()
         for neigh_node in self.G.neighbors(chosen_node):
-            color = nx.get_node_attributes(self.G, "color")[neigh_node]
-            busted_colors.add(color) 
+            color = nx.get_node_attributes(self.G, "color").get(neigh_node)
+            if color is not None:
+                busted_colors.add(color) 
         available_colors = self.get_available_colors(busted_colors)
         return [(chosen_node, color) for color in available_colors]
         
@@ -60,10 +61,15 @@ class Graph:
 
     @staticmethod
     def get_available_colors(busted_colors):
-        set_1 = set(range(max(busted_colors) + 2))
+        # for the case of zero colors
+        if len(busted_colors) == 0:
+            return set([0])
+        if max(busted_colors) + 1 == len(busted_colors):
+            return set([max(busted_colors) + 1])
+        set_1 = set(range(max(busted_colors) + 1))
         set_2 = busted_colors
         return set_1 - set_2
 
 if __name__ == '__main__':
-    busted_colors = set([0, 4, 3])
+    busted_colors = set([0, 1, 2, 4])
     print(Graph.get_available_colors(busted_colors))

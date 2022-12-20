@@ -1,12 +1,12 @@
 from graph import Graph
 import numpy as np
+import networkx as nx
 
 class SearchNode:
     def __init__(self, state: Graph, parent) -> None:
         # state new G
         self.value = 0
         self.state = state
-        self.G = Graph()
         self.is_explored = None
         self.n_played = None
         self.avg_value = None
@@ -15,9 +15,9 @@ class SearchNode:
     def explore(self):
         # get new G
         # actions is set of pairs (node, color)
-        actions = self.G.possible_moves()
+        actions = self.state.get_possible_moves()
         for act in actions:
-            new_G = self.G.copy()
+            new_G = self.state.copy()
             node_act = act[0]
             color_act = act[1]
             new_G.set_node_color(node_act, color_act)
@@ -59,11 +59,12 @@ def simulation(G: Graph):
     while len(uncolored_nodes) > 0:
         possible_actions = G.get_possible_moves()
         probabilities = random_policy(G, possible_actions)
-        choice = np.random.choice(possible_actions, 1, p=probabilities)
-        G.set_node_color(choice[0], choice[1])
+        print('possible_actions', possible_actions)
+        ind_choice = np.random.choice(len(possible_actions), 1, p=probabilities)[0]
+        G.set_node_color(possible_actions[ind_choice][0], possible_actions[ind_choice][1])
         uncolored_nodes = G.get_uncolored_nodes()
-    reward = -G.used_colors()
-    return reward
+    reward = -len(G.used_colors())
+    return reward, G
     
 
 class MCTS:
@@ -78,18 +79,30 @@ class MCTS:
         for i in range(n_episodes):
             # selection
             selected_node, depth, seq = tree.select()
+            print('Depth', depth)
+            print(type(tree.root.state))
+            print(tree.root.state.get_uncolored_nodes())
+            print('Selected node (Graph) uncolored nodes ', selected_node.state.get_uncolored_nodes())
 
             # exploration
             to_explore_nodes = selected_node.explore()
 
             # simulation
             for child in to_explore_nodes:
+                print('Selected node (Graph) uncolored nodes ', child.state.get_uncolored_nodes())
                 reward_list = []
                 for n_sim in range(number_of_simulations):
-                   reward = simulation(child.state)
+                   reward, result_G = simulation(child.state)
                    reward_list.append(reward)
+                   print('Colored graph', nx.get_node_attributes(result_G.G, "color"), nx.to_numpy_matrix(result_G.G))
+                   input()
                 reward = np.mean(reward_list)
-            
+
             # backpropagation
             # child.backpropagate()
         return best_seq
+
+if __name__ == '__main__':
+    G = Graph(nx.to_numpy_matrix(nx.star_graph(5)), 5)
+    mcts = MCTS(G)
+    mcts.run()

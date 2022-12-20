@@ -1,2 +1,2 @@
-mumpy
+numpy
 ortools==8.1
