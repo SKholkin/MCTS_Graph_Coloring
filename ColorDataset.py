@@ -35,9 +35,7 @@ def _transform_to_instance(adj_matr, n_colors, is_solvable, v_size=30, c_size=11
 def _transform_to_instance(adj_matr, n_colors, is_solvable, v_size=30, c_size=11):
     if not is_solvable:
         raise ValueError('Not solvable graph in dataset')
-    print('adj_matr', adj_matr, 'n_colors', n_colors, 'is_solvable', is_solvable), 
     return Graph(adj_matr, n_colors)
-
 
 class ColorDataset(Dataset):
     def __init__(self, root, is_train=True):
@@ -51,9 +49,8 @@ class ColorDataset(Dataset):
                                list(os.listdir(os.path.join(root, mode)))[:cut_on]]
         self.data = []
         for graph_info in basic_data:
-            print('is solvable item', graph_info['is_solvable'])
             if graph_info['is_solvable']:
-                self.data.append((graph_info['adj_list'], graph_info['n_colors'], graph_info['is_solvable']))
+                self.data.append((graph_info['adj_list'], graph_info['n_colors'] + 1, graph_info['is_solvable']))
 
     def __getitem__(self, idx):
         # get instance through transformation
