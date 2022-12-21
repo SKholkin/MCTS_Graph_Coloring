@@ -6,6 +6,7 @@ from utils import adj_matr_to_adj_list
 from graph_generator import solve_by_csp, basic_instance_gen
 import random
 import argparse
+import tqdm
 
 
 def prepare_folders(root, clear_up=False, is_test=False):
@@ -122,7 +123,7 @@ def generate_dataset_gnn_gcp(nmin, nmax, samples, root, is_test):
     prepare_folders(root, is_test=is_test)
     print_freq = 10
     max_n_colors = 0
-    for iter in range(samples):
+    for iter in tqdm.tqdm(range(samples)):
         n = np.random.randint(nmin, nmax)
         basic_graph, n_colors = basic_instance_gen(n)
         adversarial_graph, n_adv_colors = create_adversarial_graph_my_version(basic_graph, n_colors)

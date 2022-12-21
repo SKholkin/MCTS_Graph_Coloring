@@ -28,58 +28,21 @@ class Graph:
     def get_uncolored_nodes(self):
         colored_vertices = set(nx.get_node_attributes(self.G, "color").keys())
         return set(list(range(self.G.number_of_nodes()))) - colored_vertices
-
-    def get_possible_moves(self):
-        # choose uncolored node by some order (random at the moment 4.2 https://hal.archives-ouvertes.fr/hal-03118170/file/MonteCarloGraphColoring.pdf)
-        colored_vertices = set(nx.get_node_attributes(self.G, "color").keys())
-
-        vertices_to_color = self.get_uncolored_nodes()
-        # seach for a connected one
-        if len(colored_vertices) > 0:
-            connected_vertices_to_color = []
-            for vertex in vertices_to_color:
-                for vertex_2 in colored_vertices:
-                    if self.adj_matr[vertex, vertex_2] == 1:
-                        connected_vertices_to_color.append(vertex)
-                        break
-        else:
-            connected_vertices_to_color = vertices_to_color
-
-        connected_vertices_to_color = vertices_to_color
-
-        # choosing random node of all availables
-        chosen_ind = np.random.choice(len(connected_vertices_to_color))
-
-        chosen_node = self.order_nodes(connected_vertices_to_color)[chosen_ind]
-        # all possible colors for this node wil be moves
-        busted_colors = set()
-        for neigh_node in self.G.neighbors(chosen_node):
-            color = nx.get_node_attributes(self.G, "color").get(neigh_node)
-            if color is not None:
-                busted_colors.add(color) 
-        available_colors = self.get_available_colors(busted_colors)
-        return [(chosen_node, color) for color in available_colors]
     
-    def get_possible_moves_v1(self):
-        # choose uncolored node by some order (random at the moment 4.2 https://hal.archives-ouvertes.fr/hal-03118170/file/MonteCarloGraphColoring.pdf)
-
-        vertices_to_color = self.get_uncolored_nodes()
-        chosen_node = self.order_nodes(vertices_to_color)[0]
-        # all possible colors for this node wil be moves
-        busted_colors = set()
-        for neigh_node in self.G.neighbors(chosen_node):
-            color = nx.get_node_attributes(self.G, "color").get(neigh_node)
-            if color is not None:
-                busted_colors.add(color) 
-        available_colors = self.get_available_colors(busted_colors)
-        return [(chosen_node, color) for color in available_colors]
-
+    @staticmethod
+    def get_available_colors(busted_colors):
+        # for the case of zero colors
+        if len(busted_colors) == 0:
+            return set([0])
+        if max(busted_colors) + 1 == len(busted_colors):
+            return set([max(busted_colors) + 1])
+        set_1 = set(range(max(busted_colors) + 1))
+        set_2 = busted_colors
+        return set_1 - set_2
+    
     def get_possible_colorings_by_node(self, n_node):
         # all the neighboors nodes and available colors
         neighbors = self.G.neighbors(n_node)
-        ret_val = []
-        G_colors = nx.get_node_attributes(self.G, "color")
-        moves = []
         busted_colors = set()
         for neigh_node in neighbors:
             # get available colors
@@ -91,16 +54,65 @@ class Graph:
         return available_colors
 
 
-    @staticmethod
-    def get_available_colors(busted_colors):
-        # for the case of zero colors
-        if len(busted_colors) == 0:
-            return set([0])
-        if max(busted_colors) + 1 == len(busted_colors):
-            return set([max(busted_colors) + 1])
-        set_1 = set(range(max(busted_colors) + 1))
-        set_2 = busted_colors
-        return set_1 - set_2
+def get_possible_moves(self):
+    # choose uncolored node by some order (random at the moment 4.2 https://hal.archives-ouvertes.fr/hal-03118170/file/MonteCarloGraphColoring.pdf)
+    
+    # 1. Take all the uncolored nodes that do connect with already colored nodes
+    # 2. Chose one of them randomly
+    # 3. Return all the available colorings of this node
+    colored_vertices = set(nx.get_node_attributes(self.G, "color").keys())
+
+    vertices_to_color = self.get_uncolored_nodes()
+    # seach for a connected one
+    if len(colored_vertices) > 0:
+        connected_vertices_to_color = []
+        for vertex in vertices_to_color:
+            for vertex_2 in colored_vertices:
+                if self.adj_matr[vertex, vertex_2] == 1:
+                    connected_vertices_to_color.append(vertex)
+                    break
+    else:
+        connected_vertices_to_color = vertices_to_color
+
+    connected_vertices_to_color = vertices_to_color
+
+    # choosing random node of all availables
+    chosen_ind = np.random.choice(len(connected_vertices_to_color))
+
+    chosen_node = self.order_nodes(connected_vertices_to_color)[chosen_ind]
+    # all possible colors for this node wil be moves
+    busted_colors = set()
+    for neigh_node in self.G.neighbors(chosen_node):
+        color = nx.get_node_attributes(self.G, "color").get(neigh_node)
+        if color is not None:
+            busted_colors.add(color) 
+    available_colors = self.get_available_colors(busted_colors)
+    return [(chosen_node, color) for color in available_colors]
+
+def get_possible_moves_by_Dsatur(self):
+    pass
+
+def get_possible_moves_by_node_degree(self):
+    pass
+
+def get_possible_moves_v1(self):
+    # Not efficient
+
+    # 1. Take all the not colored nodes
+    # 2. Chose first of them
+    # 3. Return all the possible coloring for her
+    vertices_to_color = self.get_uncolored_nodes()
+    chosen_node = self.order_nodes(vertices_to_color)[0]
+    # all possible colors for this node wil be moves
+    busted_colors = set()
+    for neigh_node in self.G.neighbors(chosen_node):
+        color = nx.get_node_attributes(self.G, "color").get(neigh_node)
+        if color is not None:
+            busted_colors.add(color)
+
+    available_colors = self.get_available_colors(busted_colors)
+    return [(chosen_node, color) for color in available_colors]
+
 
 if __name__ == '__main__':
     busted_colors = set([0, 1, 2, 4])

@@ -67,4 +67,7 @@ def simulation(G: Graph):
 def simulation_greedy(G):
     greedy = Greedy_V2(G, stochastic=True)
     colors = greedy.run()
+    assert len(greedy.G.get_uncolored_nodes()) == 0
+
     return -colors, greedy.G
+    

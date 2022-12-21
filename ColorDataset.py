@@ -2,6 +2,8 @@ import torch
 from torch.utils.data import Dataset
 import os
 from tree.graph import Graph
+import networkx as nx
+import numpy as np
 
 def adj_matr_to_adj_list(adj_matr):
     adj_list = [[] for i in range(len(adj_matr))]
@@ -35,6 +37,10 @@ def _transform_to_instance(adj_matr, n_colors, is_solvable, v_size=30, c_size=11
 def _transform_to_instance(adj_matr, n_colors, is_solvable, v_size=30, c_size=11):
     if not is_solvable:
         raise ValueError('Not solvable graph in dataset')
+    graph = nx.from_numpy_matrix(np.array(adj_matr))
+    is_connected = nx.is_connected(graph)
+    if not is_connected:
+        print('Not connected')
     return Graph(adj_matr, n_colors)
 
 class ColorDataset(Dataset):
@@ -49,7 +55,10 @@ class ColorDataset(Dataset):
                                list(os.listdir(os.path.join(root, mode)))[:cut_on]]
         self.data = []
         for graph_info in basic_data:
-            if graph_info['is_solvable']:
+            adj_matr = np.array(adj_list_to_adj_matr(graph_info['adj_list']))
+            graph = nx.from_numpy_matrix(np.array(adj_matr))
+            is_connected = nx.is_connected(graph)
+            if graph_info['is_solvable'] and is_connected:
                 self.data.append((graph_info['adj_list'], graph_info['n_colors'] + 1, graph_info['is_solvable']))
 
     def __getitem__(self, idx):
