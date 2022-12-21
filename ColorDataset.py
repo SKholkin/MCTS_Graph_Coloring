@@ -1,7 +1,7 @@
 import torch
 from torch.utils.data import Dataset
 import os
-from graph import Graph
+from tree.graph import Graph
 
 def adj_matr_to_adj_list(adj_matr):
     adj_list = [[] for i in range(len(adj_matr))]
