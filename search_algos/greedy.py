@@ -47,8 +47,10 @@ class Greedy_V2:
 
     def run(self):
         nx.set_node_attributes(self.G.G, {node : 0 for node in self.G.G.nodes}, "importance")
-        starting_node = list(self.G.G.nodes)[0]
-        self.color_node(starting_node)
+        
+        while len(self.G.get_uncolored_nodes()) > 0:
+            starting_node = list(self.G.get_uncolored_nodes())[0]
+            self.color_node(starting_node)
         return max(self.G.used_colors()) + 1
 
     def color_node(self, node):

@@ -53,8 +53,17 @@ class Graph:
         available_colors = self.get_available_colors(busted_colors)
         return available_colors
 
+    def check_coloring(self):
+        coloring = nx.get_node_attributes(self.G, "color")
+        for colored_node in coloring.keys():
+           for vertex_2 in coloring.keys():
+                if self.adj_matr[colored_node, vertex_2] == 1:
+                    if coloring[colored_node] == coloring[vertex_2]:
+                        return False
+        return True
 
-def get_possible_moves(self):
+
+def get_possible_moves_random(self):
     # choose uncolored node by some order (random at the moment 4.2 https://hal.archives-ouvertes.fr/hal-03118170/file/MonteCarloGraphColoring.pdf)
     
     # 1. Take all the uncolored nodes that do connect with already colored nodes
@@ -90,10 +99,26 @@ def get_possible_moves(self):
     return [(chosen_node, color) for color in available_colors]
 
 def get_possible_moves_by_Dsatur(self):
-    pass
+    uncolored_nodes = self.get_uncolored_nodes()
+    n_colors_by_node = {node: 0 for node in uncolored_nodes}
+    for node in uncolored_nodes:
+        colors = self.get_possible_colorings_by_node(node)
+        n_colors_by_node[node] = len(colors)
+
+    chosen_node = list({k: v for k, v in sorted(n_colors_by_node.items(), key=lambda item: item[1])}.keys())[0]
+
+    colors = self.get_possible_colorings_by_node(chosen_node)
+    return [(chosen_node, color) for color in colors]
+
 
 def get_possible_moves_by_node_degree(self):
-    pass
+    uncolored_nodes = self.get_uncolored_nodes()
+    degrees = {node: self.G.degree(node) for node in uncolored_nodes}
+
+    chosen_node = list({k: v for k, v in sorted(degrees.items(), key=lambda item: item[1], reverse=True)}.keys())[0]
+
+    colors = self.get_possible_colorings_by_node(chosen_node)
+    return [(chosen_node, color) for color in colors]
 
 def get_possible_moves_v1(self):
     # Not efficient
