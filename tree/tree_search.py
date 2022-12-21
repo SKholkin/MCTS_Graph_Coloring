@@ -1,5 +1,6 @@
-from graph import Graph
+from tree.graph import Graph
 import numpy as np
+from search_algos.greedy import Greedy_V2
 
 class SearchNode:
     def __init__(self, state: Graph, parent) -> None:
@@ -62,3 +63,8 @@ def simulation(G: Graph):
         uncolored_nodes = G.get_uncolored_nodes()
     reward = -len(G.used_colors())
     return reward, G
+
+def simulation_greedy(G):
+    greedy = Greedy_V2(G, stochastic=True)
+    colors = greedy.run()
+    return -colors, greedy.G

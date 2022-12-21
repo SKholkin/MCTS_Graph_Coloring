@@ -1,6 +1,5 @@
-from graph import Graph
-from mcts import simulation
-from tree_search import SearchNode, SearchTree
+from tree.graph import Graph
+from tree.tree_search import SearchNode, SearchTree, simulation, simulation_greedy
 import networkx as nx
 
 class NMCS:
@@ -14,7 +13,7 @@ class NMCS:
         # run NMCS starting from G
 
         if level == 0:
-            score, seq = simulation(node.state)
+            score, seq = simulation_greedy(node.state)
             return score, seq
 
         uncolored_nodes = node.state.get_uncolored_nodes()
