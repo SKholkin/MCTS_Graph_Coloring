@@ -6,14 +6,16 @@ from search_algos.greedy import Greedy
 from tabucol import tabucol
 from tree.tree_search import simulation_greedy, simulation
 from tree.graph import get_possible_moves_random, get_possible_moves_by_Dsatur, get_possible_moves_by_node_degree
-
+from search_algos.nrpa import NRPA
+from time import time
 
 
 if __name__ == '__main__':
+
     root = 'dataset_40_60'
     dataset = ColorDataset(root)
     simulation_fn = simulation_greedy
-    error = {'greedy': 0, 'tabucol': 0, 'nmcs_dsatur': 0, 'nmcs_degree': 0}
+    error = {'greedy': 0, 'tabucol': 0, 'nmcs_dsatur': 0, 'nmcs_degree': 0, 'nrpa': 0}
     n_samples = 30
     
     nmcs_random = NMCS(simulation_fn, get_possible_moves_random)
@@ -24,30 +26,51 @@ if __name__ == '__main__':
         root = SearchNode(graph, None)
         greedy = Greedy(nx.to_numpy_matrix(graph.G))
         n_colors_greedy = greedy.execute()
+
+        nrpa = NRPA(graph, get_possible_moves_by_node_degree, upper_bound_colors=n_colors_greedy)
+
+        start = time()
+
+        nrpa_score, solution_nrpa = nrpa.run(level=4)
+
+        print('NRPA time', time() - start)
+        
+        start = time()
+
         nmcs_dsatur_score, solution_dsatur = nmcs_dsatur.run(root, level=5)
+
+        print('NMCS dsatur time:', time() - start)
+
+        start = time()
+
         nmcs_degree_score, solution_degree = nmcs_degree.run(root, level=5)
-            
+
+        print('NMCS degree time:', time() - start)
 
         if not solution_dsatur.check_coloring():
             print('Something went wrong no solution dsatur')
-            
 
         if not solution_degree.check_coloring():
             print('Something went wrong no solution degree')
 
-        if not solution_dsatur.check_coloring() or not solution_degree.check_coloring():
+        if not solution_nrpa.check_coloring():
+            print('Something went wrong no solution NRPA')
+
+        if not solution_dsatur.check_coloring() or not solution_degree.check_coloring() or not solution_nrpa.check_coloring():
             continue
 
         assert len(solution_dsatur.get_uncolored_nodes()) == 0
         assert len(solution_degree.get_uncolored_nodes()) == 0
+        assert len(solution_nrpa.get_uncolored_nodes()) == 0
         print('True chormatic number: ', graph.true_n_colors)
         print('NMCS dsatur: ', -nmcs_dsatur_score)
         print('NMCS degree: ', -nmcs_degree_score)
+        print('NRPA: ', -nrpa_score)
         print('Greedy:', n_colors_greedy)
 
-        for tabucol_n_colors in range(min(graph.true_n_colors, -nmcs_dsatur_score, -nmcs_degree_score), n_colors_greedy + 1):
+        for tabucol_n_colors in range(graph.true_n_colors, n_colors_greedy + 1):
             print('N colors tabucol', tabucol_n_colors)
-            solution = tabucol(nx.to_numpy_matrix(graph.G), tabucol_n_colors)
+            solution = tabucol(nx.to_numpy_matrix(graph.G), tabucol_n_colors, reps=100, max_iterations=1000)
             if solution is not None:
                 print('Tabucol: ', len(set(solution.values())))
                 break
@@ -55,6 +78,7 @@ if __name__ == '__main__':
                 print('Tabucol could not find solution')
         error['nmcs_dsatur'] += -nmcs_dsatur_score - graph.true_n_colors
         error['nmcs_degree'] += -nmcs_degree_score - graph.true_n_colors
+        error['nrpa'] += -nrpa_score - graph.true_n_colors
         error['greedy'] += n_colors_greedy - graph.true_n_colors
         error['tabucol'] += tabucol_n_colors - graph.true_n_colors
 

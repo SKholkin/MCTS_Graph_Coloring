@@ -41,7 +41,6 @@ class Greedy_V2:
     '''Greedy starting from some already colored graph'''
     def __init__(self, G: Graph, stochastic=False, iters=10) -> None:
         self.G = G.copy()
-        self.iters = iters
         self.stochastic = stochastic
         self.adj_matr = nx.to_numpy_matrix(G.G)
 
@@ -70,7 +69,6 @@ class Greedy_V2:
             sorted_neighboors = np.random.choice(nodes_order, size=len(nodes_order), replace=False, p=probabilities)
             for neighboor in sorted_neighboors:
                 self.color_node(neighboor)
-
         else:
             attrs = nx.get_node_attributes(self.G.G, 'importance')
             sorted_neighboors = [(node, attrs[node]) for node in neighboors]
@@ -78,6 +76,37 @@ class Greedy_V2:
             sorted_neighboors = [item[0] for item in sorted_neighboors]
             for neighboor in sorted_neighboors:
                 self.color_node(neighboor)
+
+class WeightenedStochasticGreedy:
+    def __init__(self,G: Graph, get_moves_fn, action_weights=None, upper_bound_colors=None) -> None:
+        actions = {}
+        self.G = G
+        self.get_moves_fn = get_moves_fn
+        if action_weights is None:
+            nodes_list = list(G.G.nodes())
+            if upper_bound_colors is None:
+                raise RuntimeError('Either action weights should be provided either upper bound for colors')
+            self.ub = upper_bound_colors
+            colors = upper_bound_colors
+            action_weights = {node: {color: 0 for color in  range(colors)} for node in nodes_list}
+        self.action_weights = action_weights
+        self.ub = max(list(self.action_weights[0].keys()))
+
+    def run(self):
+        G = self.G.copy()
+        uncolored_nodes = G.get_uncolored_nodes()
+        while len(uncolored_nodes) > 0:
+            moves = self.get_moves_fn(G)
+            max_color = max([item[1] for item in moves])
+            if max_color > self.ub:
+                return -self.ub - 1, None
+            probabilities = scipy.special.softmax([self.action_weights[item[0]][item[1]] for item in moves])
+            chose_move_ind = np.random.choice(len(moves), size=1, replace=False, p=probabilities)[0]
+            # print(chose_move_ind)
+            G.set_node_color(moves[chose_move_ind][0], moves[chose_move_ind][1])
+
+            uncolored_nodes = G.get_uncolored_nodes()
+        return -len(G.used_colors()), G
 
 
 if __name__ == '__main__':
