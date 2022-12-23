@@ -8,11 +8,15 @@ from tree.tree_search import simulation_greedy, simulation
 from tree.graph import get_possible_moves_random, get_possible_moves_by_Dsatur, get_possible_moves_by_node_degree
 from search_algos.nrpa import NRPA
 from time import time
+import argparse
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dataset', type=str, help='path to ther dataset')
+    args = parser.parse_args()
 
-    root = 'dataset_30_45'
+    root = args.dataset
     dataset = ColorDataset(root)
     simulation_fn = simulation_greedy
     error = {'greedy': 0, 'tabucol': 0, 'nmcs_dsatur': 0, 'nmcs_degree': 0, 'nrpa': 0, 'nrpa_dsatur': 0}
@@ -22,7 +26,6 @@ if __name__ == '__main__':
     nmcs_degree = NMCS(simulation_fn, get_possible_moves_by_node_degree)
     for i in range(n_samples):
         graph = dataset[i]
-        print(len(graph.G.nodes()))
         root = SearchNode(graph, None)
         greedy = Greedy(nx.to_numpy_matrix(graph.G))
         n_colors_greedy = greedy.execute()
