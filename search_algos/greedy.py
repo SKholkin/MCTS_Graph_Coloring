@@ -79,7 +79,6 @@ class Greedy_V2:
 
 class WeightenedStochasticGreedy:
     def __init__(self,G: Graph, get_moves_fn, action_weights=None, upper_bound_colors=None) -> None:
-        actions = {}
         self.G = G
         self.get_moves_fn = get_moves_fn
         if action_weights is None:

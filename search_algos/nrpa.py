@@ -26,7 +26,6 @@ class NRPA:
             for c in range(len(prob)):
                 self.policy[node][c] -= self.alpha * prob[c]
 
-
     def run(self, level=5):
         if level == 0:
             greedy = WeightenedStochasticGreedy(self.G, self.get_moves_fn, action_weights=self.policy)

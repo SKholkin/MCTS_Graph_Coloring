@@ -12,26 +12,31 @@ from time import time
 
 if __name__ == '__main__':
 
-    root = 'dataset_40_60'
+    root = 'dataset_30_45'
     dataset = ColorDataset(root)
     simulation_fn = simulation_greedy
-    error = {'greedy': 0, 'tabucol': 0, 'nmcs_dsatur': 0, 'nmcs_degree': 0, 'nrpa': 0}
+    error = {'greedy': 0, 'tabucol': 0, 'nmcs_dsatur': 0, 'nmcs_degree': 0, 'nrpa': 0, 'nrpa_dsatur': 0}
     n_samples = 30
     
-    nmcs_random = NMCS(simulation_fn, get_possible_moves_random)
     nmcs_dsatur = NMCS(simulation_fn, get_possible_moves_by_Dsatur)
     nmcs_degree = NMCS(simulation_fn, get_possible_moves_by_node_degree)
     for i in range(n_samples):
         graph = dataset[i]
+        print(len(graph.G.nodes()))
         root = SearchNode(graph, None)
         greedy = Greedy(nx.to_numpy_matrix(graph.G))
         n_colors_greedy = greedy.execute()
 
-        nrpa = NRPA(graph, get_possible_moves_by_node_degree, upper_bound_colors=n_colors_greedy)
+        nrpa = NRPA(graph, get_possible_moves_by_node_degree, upper_bound_colors=n_colors_greedy + 2)
+        nrpa_dstaur = NRPA(graph, get_possible_moves_by_Dsatur, upper_bound_colors=n_colors_greedy + 2)
+
+        nrpa_dsatur_score, solution_nrpa_dsatur = nrpa.run(level=4)
+
 
         start = time()
 
         nrpa_score, solution_nrpa = nrpa.run(level=4)
+
 
         print('NRPA time', time() - start)
         
@@ -65,6 +70,7 @@ if __name__ == '__main__':
         print('True chormatic number: ', graph.true_n_colors)
         print('NMCS dsatur: ', -nmcs_dsatur_score)
         print('NMCS degree: ', -nmcs_degree_score)
+        print('NRPA dsatur: ', -nrpa_dsatur_score)
         print('NRPA: ', -nrpa_score)
         print('Greedy:', n_colors_greedy)
 
@@ -79,11 +85,14 @@ if __name__ == '__main__':
         error['nmcs_dsatur'] += -nmcs_dsatur_score - graph.true_n_colors
         error['nmcs_degree'] += -nmcs_degree_score - graph.true_n_colors
         error['nrpa'] += -nrpa_score - graph.true_n_colors
+        error['nrpa_dsatur'] += -nrpa_dsatur_score - graph.true_n_colors
         error['greedy'] += n_colors_greedy - graph.true_n_colors
         error['tabucol'] += tabucol_n_colors - graph.true_n_colors
 
     print('Mean error: ')
     print('NMCS dsatur: ', error['nmcs_dsatur'] / n_samples)
     print('NMCS degree: ', error['nmcs_degree'] / n_samples)
+    print('NRPA dsatur: ', error['nrpa_dsatur'] / n_samples)
+    print('NRPA: ', error['nrpa'] / n_samples)
     print('Greedy: ', error['greedy'] / n_samples)
     print('Tabucol: ', error['tabucol'] / n_samples)

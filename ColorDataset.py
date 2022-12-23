@@ -59,7 +59,8 @@ class ColorDataset(Dataset):
             graph = nx.from_numpy_matrix(np.array(adj_matr))
             is_connected = nx.is_connected(graph)
             if graph_info['is_solvable'] and is_connected:
-                self.data.append((graph_info['adj_list'], graph_info['n_colors'] + 1, graph_info['is_solvable']))
+                self.data.append((graph_info['adj_list'], graph_info['n_colors'], graph_info['is_solvable']))
+                
 
     def __getitem__(self, idx):
         # get instance through transformation
